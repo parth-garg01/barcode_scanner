@@ -227,3 +227,9 @@ textarea {
   height: 100%;
   object-fit: cover;
 }
+
+.toast {
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  text-align: center;
+}
