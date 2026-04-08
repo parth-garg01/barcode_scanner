@@ -195,3 +195,20 @@ button {
   margin: 0 auto;
   padding: var(--space-5) var(--space-4) var(--space-6);
 }
+
+input,
+textarea {
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  min-height: auto;
+  resize: vertical;
+}
