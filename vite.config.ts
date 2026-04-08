@@ -8,4 +8,8 @@ export default defineConfig({
     // over HTTPS-less localhost and let phones connect through a tunnel in dev.
     host: true,
   },
+  test: {
+    environment: 'node',
+    setupFiles: ['./vitest.setup.ts'],
+  },
 });
