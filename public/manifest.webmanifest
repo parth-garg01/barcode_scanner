@@ -1,0 +1,10 @@
+{
+  "name": "ScanMark - Event Attendance Tracker",
+  "short_name": "ScanMark",
+  "description": "Scan ID card barcodes to track event attendance and export it to Excel.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0e1116",
+  "theme_color": "#0e1116",
+  "icons": []
+}
