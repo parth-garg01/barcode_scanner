@@ -259,3 +259,30 @@ textarea {
 .tab-bar a:hover {
   color: var(--text);
 }
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+a.card:hover {
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .app-main {
+    padding: var(--space-4) var(--space-3) var(--space-5);
+  }
+
+  .tab-bar {
+    gap: var(--space-3);
+    overflow-x: auto;
+  }
+}
