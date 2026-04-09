@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
+import Spinner from '../components/Spinner';
 import { deleteEvent, getEvent } from '../lib/events';
 import { countScans } from '../lib/scans';
 import type { Event } from '../lib/types';
@@ -17,7 +18,7 @@ export default function EventDetailPage() {
     countScans(eventId).then(setCount);
   }, [eventId]);
 
-  if (!event) return <p className="muted">Loading…</p>;
+  if (!event) return <Spinner />;
 
   async function handleDelete() {
     if (!eventId || !event) return;

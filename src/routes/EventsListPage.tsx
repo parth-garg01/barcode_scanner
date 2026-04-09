@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Spinner from '../components/Spinner';
 import { listEvents } from '../lib/events';
 import type { Event } from '../lib/types';
 
@@ -19,7 +20,7 @@ export default function EventsListPage() {
         </Link>
       </div>
 
-      {events === null && <p className="muted">Loading…</p>}
+      {events === null && <Spinner />}
       {events?.length === 0 && (
         <p className="muted">No events yet. Create one to start scanning attendees.</p>
       )}
