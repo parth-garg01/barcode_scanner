@@ -2,7 +2,9 @@ import { db } from './db';
 import type { Student } from './types';
 
 export function normaliseRegNo(regNo: string): string {
-  return regNo.trim().toUpperCase();
+  // Code 39 (common on ID cards) frames its payload in '*' start/stop
+  // characters that some decoders return literally.
+  return regNo.trim().replace(/^\*+|\*+$/g, '').toUpperCase();
 }
 
 export async function upsertStudents(students: Student[]): Promise<number> {

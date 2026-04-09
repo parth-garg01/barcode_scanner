@@ -34,3 +34,14 @@ describe('addScan', () => {
     await expect(addScan('event-2', '24BCI0115', { name: 'Asha' })).resolves.toBeDefined();
   });
 });
+
+describe('normaliseRegNo via addScan', () => {
+  beforeEach(async () => {
+    await db.scans.clear();
+  });
+
+  it('strips Code 39 start/stop asterisks from a decoded barcode', async () => {
+    const scan = await addScan('event-1', '*24BCI0115*', { name: 'Asha' });
+    expect(scan.regNo).toBe('24BCI0115');
+  });
+});
