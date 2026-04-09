@@ -286,3 +286,8 @@ a.card:hover {
     overflow-x: auto;
   }
 }
+
+.tab-bar a.active {
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}

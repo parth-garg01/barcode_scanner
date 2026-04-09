@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { deleteEvent, getEvent } from '../lib/events';
 import { countScans } from '../lib/scans';
 import type { Event } from '../lib/types';
@@ -36,9 +36,15 @@ export default function EventDetailPage() {
       </div>
 
       <nav className="tab-bar">
-        <Link to="">Scan</Link>
-        <Link to="master-list">Master list</Link>
-        <Link to="export">Export</Link>
+        <NavLink to="" end className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Scan
+        </NavLink>
+        <NavLink to="master-list" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Master list
+        </NavLink>
+        <NavLink to="export" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Export
+        </NavLink>
         <button className="btn btn-danger" style={{ marginLeft: 'auto' }} onClick={handleDelete}>
           Delete
         </button>
