@@ -1,4 +1,5 @@
 import { HashRouter, Route, Routes } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './routes/Layout';
 import EventsListPage from './routes/EventsListPage';
 import NewEventPage from './routes/NewEventPage';
@@ -9,18 +10,20 @@ import ExportPage from './routes/ExportPage';
 
 export default function App() {
   return (
-    <HashRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<EventsListPage />} />
-          <Route path="/events/new" element={<NewEventPage />} />
-          <Route path="/events/:eventId" element={<EventDetailPage />}>
-            <Route index element={<ScanPage />} />
-            <Route path="master-list" element={<MasterListPage />} />
-            <Route path="export" element={<ExportPage />} />
+    <ErrorBoundary>
+      <HashRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<EventsListPage />} />
+            <Route path="/events/new" element={<NewEventPage />} />
+            <Route path="/events/:eventId" element={<EventDetailPage />}>
+              <Route index element={<ScanPage />} />
+              <Route path="master-list" element={<MasterListPage />} />
+              <Route path="export" element={<ExportPage />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
-    </HashRouter>
+        </Routes>
+      </HashRouter>
+    </ErrorBoundary>
   );
 }
