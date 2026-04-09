@@ -1,4 +1,4 @@
-import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser';
+import type { IScannerControls } from '@zxing/browser';
 import { useEffect, useRef, useState } from 'react';
 
 interface Props {
@@ -18,24 +18,28 @@ export default function BarcodeScanner({ onDecode, cooldownMs = 1200 }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const reader = new BrowserMultiFormatReader();
     let controls: IScannerControls | undefined;
     let lastDecodeAt = 0;
     let cancelled = false;
 
-    reader
-      .decodeFromVideoDevice(undefined, videoRef.current ?? undefined, (result) => {
-        if (!result) return;
-        const now = Date.now();
-        if (now - lastDecodeAt < cooldownMs) return;
-        lastDecodeAt = now;
-        onDecode(result.getText());
-      })
-      .then((c) => {
-        if (cancelled) c.stop();
-        else controls = c;
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not access the camera'));
+    // ZXing pulls in a large decoding library; load it only when the scan
+    // screen actually mounts instead of bundling it into the main chunk.
+    import('@zxing/browser').then(({ BrowserMultiFormatReader }) => {
+      if (cancelled) return;
+      new BrowserMultiFormatReader()
+        .decodeFromVideoDevice(undefined, videoRef.current ?? undefined, (result) => {
+          if (!result) return;
+          const now = Date.now();
+          if (now - lastDecodeAt < cooldownMs) return;
+          lastDecodeAt = now;
+          onDecode(result.getText());
+        })
+        .then((c) => {
+          if (cancelled) c.stop();
+          else controls = c;
+        })
+        .catch((err) => setError(err instanceof Error ? err.message : 'Could not access the camera'));
+    });
 
     return () => {
       cancelled = true;
