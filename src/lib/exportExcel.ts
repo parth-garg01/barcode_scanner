@@ -25,7 +25,9 @@ export function buildAttendanceWorkbook(event: Event, scans: Scan[]): XLSX.WorkB
     header: COLUMNS.map((c) => c.header),
   });
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, 'Attendance');
+  // Sheet names are capped at 31 chars and can't contain []/\?*:
+  const sheetName = event.name.replace(/[[\]\\/?*:]/g, '').slice(0, 31) || 'Attendance';
+  XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
   return workbook;
 }
 

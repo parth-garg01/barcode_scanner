@@ -21,7 +21,7 @@ describe('buildAttendanceWorkbook', () => {
     ];
 
     const workbook = buildAttendanceWorkbook(event, scans);
-    const sheet = workbook.Sheets['Attendance'];
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, string>[];
 
     expect(rows).toHaveLength(1);
