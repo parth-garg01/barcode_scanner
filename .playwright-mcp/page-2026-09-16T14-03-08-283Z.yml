@@ -1,0 +1,35 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [aria-hidden] [ref=e5]: 📋
+    - heading "ScanMark" [level=1] [ref=e6]
+  - main [ref=e7]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - heading "Robotics Fest 2026" [level=2] [ref=e29]
+        - paragraph [ref=e30]: 2026-09-16 · 0 checked in
+      - navigation [ref=e31]:
+        - link "Scan" [ref=e32] [cursor=pointer]:
+          - /url: "#/events/a8b2ce8f-b803-44d9-af55-b9209b30586a"
+        - link "Master list" [ref=e33] [cursor=pointer]:
+          - /url: "#/events/a8b2ce8f-b803-44d9-af55-b9209b30586a/master-list"
+        - link "Export" [ref=e34] [cursor=pointer]:
+          - /url: "#/events/a8b2ce8f-b803-44d9-af55-b9209b30586a/export"
+        - button "Delete" [ref=e35] [cursor=pointer]
+      - generic [ref=e36]:
+        - heading "Scan attendees" [level=2] [ref=e37]
+        - paragraph [ref=e38]: No master student list uploaded yet, scans will only capture the registration number until you add one or fill details in manually.
+        - generic "Camera preview for barcode scanning" [ref=e40]
+        - generic [ref=e41]:
+          - heading "Manual entry" [level=3] [ref=e42]
+          - textbox "Registration number" [ref=e43]
+          - textbox "Name" [ref=e44]:
+            - /placeholder: Name (if not in master list)
+          - button "Add attendee" [disabled] [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - heading "Checked in" [level=3] [ref=e48]
+            - generic [ref=e49]: "0"
+          - textbox "Search attendees" [ref=e50]:
+            - /placeholder: Search by name or registration number
+          - paragraph [ref=e51]: No check-ins yet.
+          - list

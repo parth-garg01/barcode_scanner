@@ -1,0 +1,21 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [aria-hidden] [ref=f1e5]: 📋
+    - heading "ScanMark" [level=1] [ref=f1e6]
+  - main [ref=f1e7]:
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]:
+        - heading "Robotics Fest 2026" [level=2] [ref=f1e10]
+        - paragraph [ref=f1e11]: 2026-09-16 · 1 checked in
+      - navigation [ref=f1e12]:
+        - link "Scan" [ref=f1e13] [cursor=pointer]:
+          - /url: "#/events/a8b2ce8f-b803-44d9-af55-b9209b30586a"
+        - link "Master list" [ref=f1e14] [cursor=pointer]:
+          - /url: "#/events/a8b2ce8f-b803-44d9-af55-b9209b30586a/master-list"
+        - link "Export" [ref=f1e15] [cursor=pointer]:
+          - /url: "#/events/a8b2ce8f-b803-44d9-af55-b9209b30586a/export"
+        - button "Delete" [ref=f1e16] [cursor=pointer]
+      - generic [ref=f1e17]:
+        - heading "Export attendance" [level=3] [ref=f1e18]
+        - paragraph [ref=f1e19]: Downloads an XLSX file with registration number, name, department, contact number, blood group and check-in time for all 1 attendee.
+        - button "Export to Excel" [ref=f1e20] [cursor=pointer]

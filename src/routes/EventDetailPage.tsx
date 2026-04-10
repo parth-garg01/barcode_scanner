@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import Spinner from '../components/Spinner';
 import { deleteEvent, getEvent } from '../lib/events';
@@ -10,12 +11,13 @@ export default function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
-  const [count, setCount] = useState(0);
+  // Live query so the count updates immediately as scans are added, deleted
+  // or the app is used across two tabs, rather than only once on mount.
+  const count = useLiveQuery(() => (eventId ? countScans(eventId) : 0), [eventId]) ?? 0;
 
   useEffect(() => {
     if (!eventId) return;
     getEvent(eventId).then((e) => setEvent(e ?? null));
-    countScans(eventId).then(setCount);
   }, [eventId]);
 
   if (!event) return <Spinner />;

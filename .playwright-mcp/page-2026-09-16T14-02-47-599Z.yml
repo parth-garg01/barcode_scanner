@@ -1,0 +1,18 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [aria-hidden] [ref=e5]: 📋
+    - heading "ScanMark" [level=1] [ref=e6]
+  - main [ref=e7]:
+    - generic [ref=e15]:
+      - heading "New event" [level=2] [ref=e16]
+      - generic [ref=e17]:
+        - generic [ref=e18]: Event name
+        - textbox "Event name" [active] [ref=e19]:
+          - /placeholder: e.g. Robotics Fest 2026
+      - generic [ref=e20]:
+        - generic [ref=e21]: Date
+        - textbox "Date" [ref=e22]: 2026-09-16
+      - generic [ref=e23]:
+        - generic [ref=e24]: Description (optional)
+        - textbox "Description (optional)" [ref=e25]
+      - button "Create event" [disabled] [ref=e26]
