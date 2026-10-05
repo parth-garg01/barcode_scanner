@@ -5,7 +5,7 @@ interface Props {
   scans: Scan[];
 }
 
-/** Live, searchable list of everyone checked in so far, with a running count. */
+/** Live, searchable list of everyone checked in so far, across all volunteers. */
 export default function AttendeeList({ scans }: Props) {
   const [query, setQuery] = useState('');
 
@@ -37,7 +37,13 @@ export default function AttendeeList({ scans }: Props) {
       <ul className="ledger-rows">
         {filtered.map((scan) => (
           <li key={scan.id}>
-            <strong className="mono">{scan.regNo}</strong>
+            <div>
+              <strong className="mono">{scan.regNo}</strong>
+              <span>
+                {scan.volunteer}
+                {!scan.synced && ' · waiting to sync'}
+              </span>
+            </div>
             <time dateTime={new Date(scan.timestamp).toISOString()}>
               {new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </time>
