@@ -26,8 +26,7 @@ describe('buildAttendanceWorkbook', () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]['Registration Number']).toBe('24BCI0115');
-    expect(rows[0]['Name']).toBe('Asha Rao');
-    expect(rows[0]['Blood Group']).toBe('O+');
     expect(rows[0]['Check-in Time']).toBeTruthy();
+    expect(Object.keys(rows[0])).toEqual(['Registration Number', 'Check-in Time']);
   });
 });

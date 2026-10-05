@@ -1,12 +1,9 @@
+import { Capacitor } from '@capacitor/core';
 import * as XLSX from 'xlsx';
 import type { Event, Scan } from './types';
 
 const COLUMNS: { header: string; key: keyof Scan }[] = [
   { header: 'Registration Number', key: 'regNo' },
-  { header: 'Name', key: 'name' },
-  { header: 'Department', key: 'department' },
-  { header: 'Contact Number', key: 'contact' },
-  { header: 'Blood Group', key: 'bloodGroup' },
   { header: 'Check-in Time', key: 'timestamp' },
 ];
 
@@ -35,8 +32,23 @@ function safeFileName(name: string): string {
   return name.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'event';
 }
 
-/** Generates the attendance XLSX and triggers a browser download. */
-export function exportAttendanceToExcel(event: Event, scans: Scan[]): void {
+/** Generates the attendance XLSX: a browser download on the web, the share sheet in the native app. */
+export async function exportAttendanceToExcel(event: Event, scans: Scan[]): Promise<void> {
   const workbook = buildAttendanceWorkbook(event, scans);
-  XLSX.writeFile(workbook, `${safeFileName(event.name)}_attendance.xlsx`);
+  const fileName = `${safeFileName(event.name)}_attendance.xlsx`;
+  if (!Capacitor.isNativePlatform()) {
+    XLSX.writeFile(workbook, fileName);
+    return;
+  }
+  // A WebView can't download, so write to the cache dir and hand the file to the share sheet.
+  const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+    import('@capacitor/filesystem'),
+    import('@capacitor/share'),
+  ]);
+  const { uri } = await Filesystem.writeFile({
+    path: fileName,
+    data: XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' }),
+    directory: Directory.Cache,
+  });
+  await Share.share({ title: `${event.name} attendance`, files: [uri] });
 }
