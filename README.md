@@ -9,7 +9,7 @@ See [PRD.md](PRD.md) for the full product requirements.
 ## Features
 
 - Camera barcode scanning (Code 128, Code 39 and similar 1D formats) with
-  beep and vibration feedback on a successful scan.
+  vibration feedback on a successful scan.
 - Duplicate check-in detection, per event.
 - Multiple independent events, each with its own attendee list.
 - One-time master student list upload (CSV or XLSX) so scans auto-fill name,
@@ -36,13 +36,29 @@ npm run test      # run the unit test suite
 npm run preview   # preview the production build locally
 ```
 
+## Android app
+
+The same web app is wrapped with Capacitor into a native Android app (camera
+permission, vibration and Excel export through the share sheet). Building it
+needs JDK 17 and the Android SDK.
+
+```bash
+npm run build                        # build the web app into dist/
+npx cap sync android                 # copy it into the Android project
+cd android && ./gradlew assembleDebug
+```
+
+The APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`.
+Copy it to a phone and open it to install, or run `npx cap open android` to
+work on it in Android Studio.
+
 ## Usage flow
 
 1. Create an event with a name and date.
 2. Optionally upload the master student list (CSV/XLSX with registration
    number, name, department, contact number and blood group columns).
 3. Open the event's Scan tab and point the camera at each ID card barcode.
-   A successful scan beeps, vibrates and appears instantly in the live list.
+   A successful scan vibrates and appears instantly in the live list.
    A repeat scan shows a warning instead of adding a duplicate row.
 4. If a barcode won't scan, use the manual entry field below the camera.
 5. When the event ends, open the Export tab and download the XLSX file.
