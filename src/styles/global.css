@@ -360,6 +360,11 @@ textarea {
   color: var(--text);
 }
 
+.link-back {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
 .row-links {
   display: flex;
   flex-wrap: wrap;

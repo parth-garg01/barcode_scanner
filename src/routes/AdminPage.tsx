@@ -13,7 +13,6 @@ export default function AdminPage() {
   const [events, setEvents] = useState<AdminEvent[] | null>(null);
   const [sheetUrl, setSheetUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState('');
 
   const [name, setName] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -69,15 +68,6 @@ export default function AdminPage() {
       fail(err);
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function copy(code: string) {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(code);
-    } catch {
-      // Clipboard blocked: the code is on screen to read out or type.
     }
   }
 
@@ -145,7 +135,7 @@ export default function AdminPage() {
       )}
 
       <section className="stack">
-        <h3 className="eyebrow">Codes to give your volunteers</h3>
+        <h3 className="eyebrow">Your events and their codes</h3>
         {events === null && !error && <Spinner />}
         {events?.length === 0 && <p className="empty">No events yet. Create one above to get its code.</p>}
         {!!events?.length && (
@@ -154,7 +144,7 @@ export default function AdminPage() {
               const { day, month } = stubDate(event.date);
               return (
                 <li key={event.code}>
-                  <button type="button" className="stub" onClick={() => copy(event.code)} aria-label={`Copy code ${event.code} for ${event.name}`}>
+                  <Link to={`/admin/${event.code}`} className="stub">
                     <span className="stub-date">
                       <b>{day}</b>
                       <span>{month}</span>
@@ -165,9 +155,9 @@ export default function AdminPage() {
                     </span>
                     <span className="stub-code">
                       <span className="mono">{event.code}</span>
-                      <span className="eyebrow">{copied === event.code ? 'Copied' : 'Tap to copy'}</span>
+                      <span className="eyebrow">View list</span>
                     </span>
-                  </button>
+                  </Link>
                 </li>
               );
             })}
