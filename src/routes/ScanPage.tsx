@@ -9,7 +9,8 @@ import { addScan, DuplicateScanError, listScans } from '../lib/scans';
 import { countStudents } from '../lib/students';
 import type { Scan } from '../lib/types';
 
-type Status = { tone: 'success' | 'warning' | 'error'; message: string } | null;
+// `at` keys the toast so a repeat of the same result still replays its entrance.
+type Status = { tone: 'success' | 'warning' | 'error'; message: string; at: number } | null;
 
 export default function ScanPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -27,35 +28,46 @@ export default function ScanPage() {
     countStudents().then((n) => setHasMasterList(n > 0));
   }, []);
 
-  async function handleScan(regNo: string, manualName?: string) {
+  async function handleScan(regNo: string) {
     if (!eventId) return;
     try {
-      const scan = await addScan(eventId, regNo, manualName ? { name: manualName } : undefined);
+      const scan = await addScan(eventId, regNo);
       successFeedback();
-      setStatus({ tone: 'success', message: `Checked in: ${scan.name || scan.regNo}` });
+      setStatus({ tone: 'success', message: `Checked in: ${scan.name || scan.regNo}`, at: Date.now() });
       setScans((prev) => [scan, ...prev]);
     } catch (err) {
       warningFeedback();
       if (err instanceof DuplicateScanError) {
-        setStatus({ tone: 'warning', message: `${err.existing.regNo} already checked in` });
+        setStatus({ tone: 'warning', message: `${err.existing.regNo} already checked in`, at: Date.now() });
       } else {
-        setStatus({ tone: 'error', message: 'Could not record that scan. Try again.' });
+        setStatus({ tone: 'error', message: 'Could not record that scan. Try again.', at: Date.now() });
       }
     }
   }
 
   return (
     <div className="stack">
-      <h2>Scan attendees</h2>
+      <h3 className="visually-hidden">Scan attendees</h3>
+      <div className="scan-stage">
+        <BarcodeScanner onDecode={handleScan} />
+        <div className="scan-status" role="status" aria-live="polite">
+          {status ? (
+            <Toast key={status.at} tone={status.tone} message={status.message} />
+          ) : (
+            <p className="scan-hint">Line the barcode up inside the brackets</p>
+          )}
+        </div>
+      </div>
       {!hasMasterList && (
-        <p className="muted">
-          No master student list uploaded yet, scans will only capture the registration number until
-          you add one or fill details in manually.
+        <p className="note">
+          No student list uploaded yet, so scans only capture the registration number. Add one under
+          Students to fill in names automatically.
         </p>
       )}
-      {status && <Toast tone={status.tone} message={status.message} />}
-      <BarcodeScanner onDecode={(text) => handleScan(text)} />
-      <ManualEntryForm onSubmit={(regNo, name) => handleScan(regNo, name)} />
+      <details className="manual">
+        <summary>Enter manually</summary>
+        <ManualEntryForm onSubmit={handleScan} />
+      </details>
       <AttendeeList scans={scans} />
     </div>
   );

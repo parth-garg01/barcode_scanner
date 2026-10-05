@@ -1,37 +1,36 @@
 /*
- * Design direction: a dark, high contrast interface. Events run in dim halls
- * and volunteers hold the phone at arm's length, so type stays large, tap
- * targets stay at 44px and the accent colour is reserved for the one action
- * that matters on each screen.
+ * Design direction: the door desk at a night event. Admission ticket shapes,
+ * tall condensed signage type and one hi-vis accent (the colour of a steward's
+ * vest) on a near black ground. Events run in dim halls and volunteers hold
+ * the phone at arm's length, so the numbers that matter are huge, tap targets
+ * stay at 44px and the accent is reserved for the action or result that
+ * matters on each screen. Structure comes from rules, perforations and type
+ * rather than from boxes.
  */
 
 :root {
   --bg: #0e1116;
-  --surface: #161b22;
-  --surface-raised: #1d232c;
-  --border: #2a313c;
-  --text: #e8ecf1;
-  --text-muted: #9aa5b4;
-  --accent: #4f8cff;
-  --accent-text: #ffffff;
-  --success: #2fbf71;
-  --warning: #f5a524;
-  --danger: #f2544b;
-
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 18px;
+  --raise: #161b22;
+  --line: #2a313c;
+  --text: #f3f1ea;
+  --text-muted: #98a1ae;
+  --accent: #d6ff3f;
+  --accent-ink: #10130a;
+  --warning: #ffb224;
+  --danger: #ff6a5e;
 
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
-  --space-6: 32px;
+  --space-6: 36px;
 
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --font: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --tap: 44px;
+  --gutter: var(--space-4);
 
   color-scheme: dark;
 }
@@ -48,7 +47,20 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* A faint barcode band across the top of every screen, fading into the ground. */
+  background:
+    linear-gradient(to bottom, transparent, var(--bg) 220px) no-repeat,
+    repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 0 2px,
+        transparent 2px 9px,
+        rgba(255, 255, 255, 0.05) 9px 14px,
+        transparent 14px 17px,
+        rgba(255, 255, 255, 0.05) 17px 18px,
+        transparent 18px 29px
+      )
+      top / 100% 220px no-repeat,
+    var(--bg);
   color: var(--text);
   font-family: var(--font);
   font-size: 16px;
@@ -59,18 +71,9 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+p {
   margin: 0;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-}
-
-h1 {
-  font-size: 1.5rem;
-}
-
-h2 {
-  font-size: 1.125rem;
 }
 
 a {
@@ -83,49 +86,30 @@ button {
   cursor: pointer;
 }
 
-:where(a, button, input, select, textarea):focus-visible {
+:where(a, button, input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: var(--tap);
-  padding: 0 var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-raised);
-  color: var(--text);
-  font-weight: 600;
+/* ---------- Type ---------- */
+
+.display {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 11vw, 3.75rem);
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
-}
-
-.btn-danger {
-  color: var(--danger);
-}
-
-.btn-block {
-  width: 100%;
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .muted {
@@ -133,14 +117,96 @@ button {
 }
 
 .mono {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--mono);
   letter-spacing: 0.02em;
+}
+
+/* ---------- Layout ---------- */
+
+.app-shell {
+  min-height: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--space-4) + env(safe-area-inset-top)) var(--gutter) var(--space-3);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wordmark h1 {
+  font: inherit;
+}
+
+.barcode-mark {
+  width: 26px;
+  height: 18px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 3px,
+    transparent 3px 5px,
+    var(--accent) 5px 6px,
+    transparent 6px 9px,
+    var(--accent) 9px 11px,
+    transparent 11px 13px
+  );
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--space-3) var(--gutter) var(--space-6);
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* One orchestrated entrance per screen: sections rise in sequence. */
+.page > * {
+  animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.page > :nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.page > :nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.page > :nth-child(n + 4) {
+  animation-delay: 0.18s;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
 
 .row {
@@ -166,58 +232,346 @@ button {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-.app-shell {
-  min-height: 100%;
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  padding: 0 var(--space-5);
+  border: 1.5px solid var(--text);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #e4ff7a;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.link-danger {
+  align-self: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ---------- Forms: ruled lines, like filling in a paper slip ---------- */
+
+.field {
   display: flex;
   flex-direction: column;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.app-main {
-  flex: 1;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: var(--space-5) var(--space-4) var(--space-6);
+  gap: var(--space-1);
 }
 
 input,
 textarea {
   width: 100%;
   min-height: var(--tap);
-  padding: var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  padding: var(--space-2) 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid var(--line);
+  border-radius: 0;
   color: var(--text);
   font: inherit;
+  font-size: 1.0625rem;
+  transition: border-color 0.15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6f7885;
+}
+
+input:focus,
+textarea:focus {
+  border-bottom-color: var(--accent);
 }
 
 textarea {
-  min-height: auto;
   resize: vertical;
+}
+
+input[type='file'] {
+  border: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+input[type='file']::file-selector-button {
+  min-height: 52px;
+  margin-right: var(--space-3);
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* ---------- Notices (errors, hints): a marked margin, not a box ---------- */
+
+.card {
+  padding: var(--space-2) 0 var(--space-2) var(--space-4);
+  border-left: 3px solid var(--danger);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.note {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--line);
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+/* ---------- Events: admission ticket stubs ---------- */
+
+.stubs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stub {
+  position: relative;
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  min-height: 92px;
+  background: var(--raise);
+  transition: transform 0.15s ease;
+}
+
+.stub:hover {
+  transform: translateX(4px);
+}
+
+.stub-date {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 2px dashed var(--bg);
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.stub-date b {
+  font-size: 2.5rem;
+  color: var(--accent);
+}
+
+.stub-date span {
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+}
+
+/* Punched notches where the stub tears off. */
+.stub::before,
+.stub::after {
+  content: '';
+  position: absolute;
+  left: 75px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.stub::before {
+  top: -9px;
+}
+
+.stub::after {
+  bottom: -9px;
+}
+
+.stub-body {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stub-body strong {
+  font-size: 1.125rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.stub-body span {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stub-go {
+  padding-right: var(--space-4);
+  font-family: var(--display);
+  font-size: 1.75rem;
+  color: var(--text-muted);
+}
+
+.empty {
+  padding: var(--space-5) 0;
+  border-top: 1.5px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
+  color: var(--text-muted);
+}
+
+/* ---------- Event screen ---------- */
+
+.event-shell {
+  /* Room for the floating tab bar. */
+  padding-bottom: 96px;
+}
+
+.event-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.event-hero .display {
+  font-size: clamp(1.75rem, 8vw, 2.75rem);
+  margin-top: var(--space-1);
+}
+
+.tally {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.tally-num {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(4rem, 20vw, 6rem);
+  line-height: 0.82;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.tab-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: rgba(22, 27, 34, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.tab-bar a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-5);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.tab-bar a:hover {
+  color: var(--text);
+}
+
+.tab-bar a.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---------- Scanner ---------- */
+
+.scan-stage {
+  /* Full bleed: the viewfinder runs edge to edge on a phone. */
+  margin-inline: calc(-1 * var(--gutter));
 }
 
 .scanner-frame {
   position: relative;
-  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid var(--border);
   aspect-ratio: 4 / 3;
   background: #000;
 }
@@ -228,75 +582,186 @@ textarea {
   object-fit: cover;
 }
 
+/* Aiming brackets: match the first strip BarcodeScanner decodes (80% x 40%). */
+.scanner-guide {
+  --c: var(--accent);
+  --t: 3px;
+  --l: 26px;
+  position: absolute;
+  inset: 30% 10%;
+  pointer-events: none;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--l) var(--t),
+    linear-gradient(var(--c), var(--c)) top left / var(--t) var(--l),
+    linear-gradient(var(--c), var(--c)) top right / var(--l) var(--t),
+    linear-gradient(var(--c), var(--c)) top right / var(--t) var(--l),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--t),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--t) var(--l),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--t),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--t) var(--l);
+  background-repeat: no-repeat;
+}
+
+.scanner-guide::after {
+  content: '';
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 8%;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: sweep 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes sweep {
+  to {
+    top: 92%;
+  }
+}
+
+/* The result strip sits flush under the viewfinder and is always present, so
+   the layout never jumps when a scan lands. */
+.scan-status {
+  min-height: 64px;
+  display: flex;
+  background: var(--raise);
+  /* The toast scales in from slightly oversize; keep that inside the strip. */
+  overflow: hidden;
+}
+
+.scan-hint,
 .toast {
-  padding: var(--space-3) var(--space-4);
-  font-weight: 600;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--gutter);
   text-align: center;
 }
 
-.attendee-list {
+.scan-hint {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+.toast {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  color: var(--accent-ink);
+  animation: stamp 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.toast-success {
+  background: var(--accent);
+}
+
+.toast-warning {
+  background: var(--warning);
+}
+
+.toast-error {
+  background: var(--danger);
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+
+.manual summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--tap);
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.manual summary::-webkit-details-marker {
+  display: none;
+}
+
+.manual summary::after {
+  content: '+';
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.manual[open] summary::after {
+  content: '\2212';
+}
+
+.manual form {
+  padding-top: var(--space-4);
+}
+
+/* ---------- Attendee ledger ---------- */
+
+.ledger-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.ledger-rows {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
 }
 
-.tab-bar {
-  display: flex;
-  gap: var(--space-4);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-2);
+.ledger-rows li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line);
 }
 
-.tab-bar a {
+.ledger-rows li:first-child {
+  animation: rise 0.3s ease both;
+}
+
+.ledger-rows strong {
+  display: block;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.ledger-rows .mono {
+  font-size: 0.875rem;
   color: var(--text-muted);
-  font-weight: 600;
-  padding: var(--space-2) 0;
 }
 
-.tab-bar a:hover {
-  color: var(--text);
+.ledger-rows time {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.btn:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-.btn:active:not(:disabled) {
-  filter: brightness(0.95);
-}
-
-a.card:hover {
-  border-color: var(--accent);
-}
-
-@media (max-width: 480px) {
-  .app-header {
-    padding: var(--space-3) var(--space-4);
-  }
-
-  .app-main {
-    padding: var(--space-4) var(--space-3) var(--space-5);
-  }
-
-  .tab-bar {
-    gap: var(--space-3);
-    overflow-x: auto;
-  }
-}
-
-.tab-bar a.active {
-  color: var(--accent);
-  box-shadow: inset 0 -2px 0 var(--accent);
-}
+/* ---------- Spinner ---------- */
 
 .spinner {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--line);
   border-top-color: var(--accent);
   animation: spin 0.7s linear infinite;
 }

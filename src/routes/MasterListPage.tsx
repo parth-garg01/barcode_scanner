@@ -30,7 +30,7 @@ export default function MasterListPage() {
 
   return (
     <div className="stack">
-      <h2>Master student list</h2>
+      <h3 className="eyebrow">Student list</h3>
       <p className="muted">
         Upload a CSV or Excel file with columns for registration number, name, department, contact
         number and blood group. Future scans of a known ID will auto-fill these details.
@@ -49,7 +49,11 @@ export default function MasterListPage() {
       />
 
       {busy && <p className="muted">Importing…</p>}
-      {status && <p role="status">{status}</p>}
+      {status && (
+        <p className="note" role="status">
+          {status}
+        </p>
+      )}
     </div>
   );
 }

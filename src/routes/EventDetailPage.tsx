@@ -30,30 +30,37 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="stack">
-      <div>
-        <h2>{event.name}</h2>
-        <p className="muted">
-          {event.date} · {count} checked in
+    <div className="page event-shell">
+      <header className="event-hero">
+        <div>
+          <p className="eyebrow">
+            {new Date(`${event.date}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+          </p>
+          <h2 className="display">{event.name}</h2>
+        </div>
+        <p className="tally">
+          <span className="tally-num">{String(count).padStart(2, '0')}</span>
+          <span className="eyebrow">checked in</span>
         </p>
-      </div>
+      </header>
 
-      <nav className="tab-bar">
+      <Outlet />
+
+      <button className="link-danger" onClick={handleDelete}>
+        Delete event
+      </button>
+
+      <nav className="tab-bar" aria-label="Event sections">
         <NavLink to="" end className={({ isActive }) => (isActive ? 'active' : undefined)}>
           Scan
         </NavLink>
         <NavLink to="master-list" className={({ isActive }) => (isActive ? 'active' : undefined)}>
-          Master list
+          Students
         </NavLink>
         <NavLink to="export" className={({ isActive }) => (isActive ? 'active' : undefined)}>
           Export
         </NavLink>
-        <button className="btn btn-danger" style={{ marginLeft: 'auto' }} onClick={handleDelete}>
-          Delete
-        </button>
       </nav>
-
-      <Outlet />
     </div>
   );
 }

@@ -1,11 +1,13 @@
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 
 export default function Layout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <span aria-hidden="true">📋</span>
-        <h1>ScanMark</h1>
+        <Link to="/" className="wordmark" aria-label="ScanMark, all events">
+          <span className="barcode-mark" aria-hidden="true" />
+          <h1>ScanMark</h1>
+        </Link>
       </header>
       <main className="app-main">
         <Outlet />

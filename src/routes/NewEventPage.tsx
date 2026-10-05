@@ -18,13 +18,15 @@ export default function NewEventPage() {
   }
 
   return (
-    <form className="stack" onSubmit={handleSubmit}>
-      <h2>New event</h2>
+    <form className="page" onSubmit={handleSubmit}>
+      <div>
+        <p className="eyebrow">Attendance desk</p>
+        <h2 className="display">New event</h2>
+      </div>
 
-      <label className="stack" style={{ gap: 'var(--space-1)' }}>
-        <span>Event name</span>
+      <label className="field">
+        <span className="eyebrow">Event name</span>
         <input
-          className="card"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Robotics Fest 2026"
@@ -33,18 +35,17 @@ export default function NewEventPage() {
         />
       </label>
 
-      <label className="stack" style={{ gap: 'var(--space-1)' }}>
-        <span>Date</span>
-        <input className="card" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+      <label className="field">
+        <span className="eyebrow">Date</span>
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       </label>
 
-      <label className="stack" style={{ gap: 'var(--space-1)' }}>
-        <span>Description (optional)</span>
+      <label className="field">
+        <span className="eyebrow">Description (optional)</span>
         <textarea
-          className="card"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={3}
+          rows={2}
         />
       </label>
 

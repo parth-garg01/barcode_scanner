@@ -18,15 +18,16 @@ export default function AttendeeList({ scans }: Props) {
   }, [scans, query]);
 
   return (
-    <div className="stack">
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <h3>Checked in</h3>
+    <section className="stack">
+      <div className="ledger-head">
+        <h3 className="eyebrow">Checked in</h3>
         <span className="mono" aria-live="polite">
           {scans.length}
         </span>
       </div>
 
       <input
+        type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search by name or registration number"
@@ -35,17 +36,19 @@ export default function AttendeeList({ scans }: Props) {
 
       {filtered.length === 0 && <p className="muted">{scans.length === 0 ? 'No check-ins yet.' : 'No matches.'}</p>}
 
-      <ul className="attendee-list">
+      <ul className="ledger-rows">
         {filtered.map((scan) => (
-          <li key={scan.id} className="card row" style={{ justifyContent: 'space-between' }}>
+          <li key={scan.id}>
             <div>
-              <strong>{scan.name || 'Unknown'}</strong>
-              <div className="muted mono">{scan.regNo}</div>
+              <strong className={scan.name ? undefined : 'mono'}>{scan.name || scan.regNo}</strong>
+              <span className="mono">{scan.name ? scan.regNo : 'Not in student list'}</span>
             </div>
-            <span className="muted">{new Date(scan.timestamp).toLocaleTimeString()}</span>
+            <time dateTime={new Date(scan.timestamp).toISOString()}>
+              {new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </time>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
