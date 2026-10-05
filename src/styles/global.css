@@ -339,7 +339,57 @@ textarea {
   resize: vertical;
 }
 
-/* ---------- Notices (errors): a marked margin, not a box ---------- */
+.link-quiet {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.link-quiet:hover {
+  color: var(--text);
+}
+
+.row-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-4);
+}
+
+/* The join code is the one thing typed from a spoken or handwritten source: make it unmistakable. */
+.code-input {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.code-input::placeholder {
+  color: #3a424e;
+}
+
+/* ---------- Notices (errors, hints): a marked margin, not a box ---------- */
+
+.note {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--warning);
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
 
 .card {
   padding: var(--space-2) 0 var(--space-2) var(--space-4);
@@ -363,6 +413,12 @@ textarea {
 
 .stub {
   position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   display: grid;
   grid-template-columns: 84px 1fr auto;
   align-items: center;
@@ -440,6 +496,25 @@ textarea {
   text-overflow: ellipsis;
 }
 
+.stub-code {
+  padding-right: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.stub-code .mono {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.stub-code .eyebrow {
+  font-size: 0.625rem;
+}
+
 .stub-go {
   padding-right: var(--space-4);
   font-family: var(--display);
@@ -455,11 +530,6 @@ textarea {
 }
 
 /* ---------- Event screen ---------- */
-
-.event-shell {
-  /* Room for the floating tab bar. */
-  padding-bottom: 96px;
-}
 
 .event-hero {
   display: grid;
@@ -488,49 +558,6 @@ textarea {
   line-height: 0.82;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
-}
-
-.tab-bar {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background: rgba(22, 27, 34, 0.92);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-}
-
-.tab-bar a {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tap);
-  padding: 0 var(--space-5);
-  border-radius: 999px;
-  color: var(--text-muted);
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 1.125rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-}
-
-.tab-bar a:hover {
-  color: var(--text);
-}
-
-.tab-bar a.active {
-  background: var(--accent);
-  color: var(--accent-ink);
 }
 
 /* ---------- Scanner ---------- */
@@ -648,6 +675,14 @@ textarea {
   }
 }
 
+.sync {
+  text-align: center;
+}
+
+.sync-offline {
+  color: var(--warning);
+}
+
 .manual summary {
   display: flex;
   align-items: center;
@@ -712,6 +747,11 @@ textarea {
   display: block;
   line-height: 1.3;
   overflow-wrap: anywhere;
+}
+
+.ledger-rows span {
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 .ledger-rows time {
