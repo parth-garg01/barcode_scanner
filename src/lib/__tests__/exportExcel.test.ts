@@ -11,12 +11,7 @@ describe('buildAttendanceWorkbook', () => {
         id: 1,
         eventId: 'e1',
         regNo: '24BCI0115',
-        name: 'Asha Rao',
-        department: 'CSE',
-        contact: '9999999999',
-        bloodGroup: 'O+',
         timestamp: Date.UTC(2026, 3, 10, 10, 0),
-        manual: false,
       },
     ];
 

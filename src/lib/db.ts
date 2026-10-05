@@ -1,9 +1,8 @@
 import Dexie, { type Table } from 'dexie';
-import type { Event, Scan, Student } from './types';
+import type { Event, Scan } from './types';
 
 class ScanMarkDB extends Dexie {
   events!: Table<Event, string>;
-  students!: Table<Student, string>;
   scans!: Table<Scan, number>;
 
   constructor() {
@@ -14,6 +13,8 @@ class ScanMarkDB extends Dexie {
       // compound index keeps duplicate lookup for one event to a single query
       scans: '++id, eventId, [eventId+regNo], regNo, timestamp',
     });
+    // The master student list was removed; drop its table from existing installs.
+    this.version(2).stores({ students: null });
   }
 }
 

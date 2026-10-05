@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Spinner from './components/Spinner';
 import Layout from './routes/Layout';
@@ -8,9 +8,8 @@ import NewEventPage from './routes/NewEventPage';
 import EventDetailPage from './routes/EventDetailPage';
 import ScanPage from './routes/ScanPage';
 
-// These two pull in the xlsx library, which is sizeable and only needed once
-// an organiser actually opens the master list or export tab.
-const MasterListPage = lazy(() => import('./routes/MasterListPage'));
+// This pulls in the xlsx library, which is sizeable and only needed once
+// an organiser actually opens the export tab.
 const ExportPage = lazy(() => import('./routes/ExportPage'));
 
 export default function App() {
@@ -24,9 +23,10 @@ export default function App() {
               <Route path="/events/new" element={<NewEventPage />} />
               <Route path="/events/:eventId" element={<EventDetailPage />}>
                 <Route index element={<ScanPage />} />
-                <Route path="master-list" element={<MasterListPage />} />
                 <Route path="export" element={<ExportPage />} />
               </Route>
+              {/* Old links (for example the removed Students tab) go back to the events list. */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
         </Suspense>

@@ -6,7 +6,6 @@ import ManualEntryForm from '../components/ManualEntryForm';
 import Toast from '../components/Toast';
 import { successFeedback, warningFeedback } from '../lib/feedback';
 import { addScan, DuplicateScanError, listScans } from '../lib/scans';
-import { countStudents } from '../lib/students';
 import type { Scan } from '../lib/types';
 
 // `at` keys the toast so a repeat of the same result still replays its entrance.
@@ -16,7 +15,6 @@ export default function ScanPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [scans, setScans] = useState<Scan[]>([]);
   const [status, setStatus] = useState<Status>(null);
-  const [hasMasterList, setHasMasterList] = useState(true);
 
   const refresh = useCallback(() => {
     if (eventId) listScans(eventId).then(setScans);
@@ -24,16 +22,12 @@ export default function ScanPage() {
 
   useEffect(refresh, [refresh]);
 
-  useEffect(() => {
-    countStudents().then((n) => setHasMasterList(n > 0));
-  }, []);
-
   async function handleScan(regNo: string) {
     if (!eventId) return;
     try {
       const scan = await addScan(eventId, regNo);
       successFeedback();
-      setStatus({ tone: 'success', message: `Checked in: ${scan.name || scan.regNo}`, at: Date.now() });
+      setStatus({ tone: 'success', message: `Checked in: ${scan.regNo}`, at: Date.now() });
       setScans((prev) => [scan, ...prev]);
     } catch (err) {
       warningFeedback();
@@ -58,12 +52,6 @@ export default function ScanPage() {
           )}
         </div>
       </div>
-      {!hasMasterList && (
-        <p className="note">
-          No student list uploaded yet, so scans only capture the registration number. Add one under
-          Students to fill in names automatically.
-        </p>
-      )}
       <details className="manual">
         <summary>Enter manually</summary>
         <ManualEntryForm onSubmit={handleScan} />

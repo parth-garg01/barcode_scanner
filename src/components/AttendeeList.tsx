@@ -12,9 +12,7 @@ export default function AttendeeList({ scans }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return scans;
-    return scans.filter(
-      (s) => s.name.toLowerCase().includes(q) || s.regNo.toLowerCase().includes(q),
-    );
+    return scans.filter((s) => s.regNo.toLowerCase().includes(q));
   }, [scans, query]);
 
   return (
@@ -30,7 +28,7 @@ export default function AttendeeList({ scans }: Props) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by name or registration number"
+        placeholder="Search by registration number"
         aria-label="Search attendees"
       />
 
@@ -39,10 +37,7 @@ export default function AttendeeList({ scans }: Props) {
       <ul className="ledger-rows">
         {filtered.map((scan) => (
           <li key={scan.id}>
-            <div>
-              <strong className={scan.name ? undefined : 'mono'}>{scan.name || scan.regNo}</strong>
-              <span className="mono">{scan.name ? scan.regNo : 'Not in student list'}</span>
-            </div>
+            <strong className="mono">{scan.regNo}</strong>
             <time dateTime={new Date(scan.timestamp).toISOString()}>
               {new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </time>

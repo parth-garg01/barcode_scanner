@@ -1,21 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../db';
 import { addScan, DuplicateScanError, listScans } from '../scans';
-import { upsertStudents } from '../students';
 
 describe('addScan', () => {
   beforeEach(async () => {
-    await db.students.clear();
     await db.scans.clear();
     await db.events.clear();
   });
 
-  it('auto-fills details from the master list and rejects a repeat scan', async () => {
-    await upsertStudents([{ regNo: '24bci0115', name: 'Asha Rao', department: 'CSE', bloodGroup: 'O+' }]);
-
+  it('records a check-in and rejects a repeat scan, whatever the letter case', async () => {
     const scan = await addScan('event-1', '24BCI0115');
-    expect(scan.name).toBe('Asha Rao');
-    expect(scan.manual).toBe(false);
+    expect(scan.regNo).toBe('24BCI0115');
 
     await expect(addScan('event-1', '24bci0115')).rejects.toBeInstanceOf(DuplicateScanError);
 
@@ -23,25 +18,13 @@ describe('addScan', () => {
     expect(rows).toHaveLength(1);
   });
 
-  it('falls back to manual details when the ID is not in the master list', async () => {
-    const scan = await addScan('event-1', '99XYZ0000', { name: 'Walk-in Guest' });
-    expect(scan.manual).toBe(true);
-    expect(scan.name).toBe('Walk-in Guest');
-  });
-
   it('keeps the same registration number separate across different events', async () => {
-    await addScan('event-1', '24BCI0115', { name: 'Asha' });
-    await expect(addScan('event-2', '24BCI0115', { name: 'Asha' })).resolves.toBeDefined();
-  });
-});
-
-describe('normaliseRegNo via addScan', () => {
-  beforeEach(async () => {
-    await db.scans.clear();
+    await addScan('event-1', '24BCI0115');
+    await expect(addScan('event-2', '24BCI0115')).resolves.toBeDefined();
   });
 
   it('strips Code 39 start/stop asterisks from a decoded barcode', async () => {
-    const scan = await addScan('event-1', '*24BCI0115*', { name: 'Asha' });
+    const scan = await addScan('event-1', '*24BCI0115*');
     expect(scan.regNo).toBe('24BCI0115');
   });
 });

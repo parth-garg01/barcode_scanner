@@ -11,7 +11,7 @@ describe('deleteEvent', () => {
 
   it('removes the event and cascades to its scans', async () => {
     const event = await createEvent({ name: 'Hack Night', date: '2026-04-09' });
-    await addScan(event.id, '24BCI0115', { name: 'Asha' });
+    await addScan(event.id, '24BCI0115');
 
     await deleteEvent(event.id);
 

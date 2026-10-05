@@ -1,5 +1,4 @@
 import { db } from './db';
-import { getStudent, normaliseRegNo } from './students';
 import type { Scan } from './types';
 
 export class DuplicateScanError extends Error {
@@ -9,16 +8,14 @@ export class DuplicateScanError extends Error {
   }
 }
 
-/**
- * Records a scan for an event. Looks up the master student list to fill in
- * name/department/contact/bloodGroup when available; falls back to whatever
- * details are passed in (manual entry) otherwise.
- */
-export async function addScan(
-  eventId: string,
-  regNo: string,
-  manualDetails?: Partial<Pick<Scan, 'name' | 'department' | 'contact' | 'bloodGroup'>>,
-): Promise<Scan> {
+export function normaliseRegNo(regNo: string): string {
+  // Code 39 (common on ID cards) frames its payload in '*' start/stop
+  // characters that some decoders return literally.
+  return regNo.trim().replace(/^\*+|\*+$/g, '').toUpperCase();
+}
+
+/** Records a check-in for an event, rejecting a registration number already scanned there. */
+export async function addScan(eventId: string, regNo: string): Promise<Scan> {
   const normalisedRegNo = normaliseRegNo(regNo);
 
   const existing = await db.scans.where({ eventId, regNo: normalisedRegNo }).first();
@@ -26,18 +23,7 @@ export async function addScan(
     throw new DuplicateScanError(existing);
   }
 
-  const student = await getStudent(normalisedRegNo);
-  const scan: Scan = {
-    eventId,
-    regNo: normalisedRegNo,
-    name: student?.name ?? manualDetails?.name ?? '',
-    department: student?.department ?? manualDetails?.department,
-    contact: student?.contact ?? manualDetails?.contact,
-    bloodGroup: student?.bloodGroup ?? manualDetails?.bloodGroup,
-    timestamp: Date.now(),
-    manual: !student,
-  };
-
+  const scan: Scan = { eventId, regNo: normalisedRegNo, timestamp: Date.now() };
   const id = await db.scans.add(scan);
   return { ...scan, id };
 }

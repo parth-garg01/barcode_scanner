@@ -6,7 +6,7 @@ import { deleteEvent, getEvent } from '../lib/events';
 import { countScans } from '../lib/scans';
 import type { Event } from '../lib/types';
 
-/** Event summary header plus tab navigation into scan/list/master/export sub-pages. */
+/** Event summary header plus tab navigation into the scan and export sub-pages. */
 export default function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -53,9 +53,6 @@ export default function EventDetailPage() {
       <nav className="tab-bar" aria-label="Event sections">
         <NavLink to="" end className={({ isActive }) => (isActive ? 'active' : undefined)}>
           Scan
-        </NavLink>
-        <NavLink to="master-list" className={({ isActive }) => (isActive ? 'active' : undefined)}>
-          Students
         </NavLink>
         <NavLink to="export" className={({ isActive }) => (isActive ? 'active' : undefined)}>
           Export

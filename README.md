@@ -12,11 +12,10 @@ See [PRD.md](PRD.md) for the full product requirements.
   vibration feedback on a successful scan.
 - Duplicate check-in detection, per event.
 - Multiple independent events, each with its own attendee list.
-- One-time master student list upload (CSV or XLSX) so scans auto-fill name,
-  department, contact number and blood group.
 - Manual entry fallback for damaged or unrecognised barcodes.
 - Live, searchable attendee list with a running count.
-- One-click Excel (XLSX) export of the full attendance record.
+- One-click Excel (XLSX) export of each registration number and its
+  check-in time.
 - Works fully offline: everything is stored locally in the browser
   (IndexedDB), so a flaky venue Wi-Fi never blocks a scan.
 
@@ -55,15 +54,13 @@ work on it in Android Studio.
 ## Usage flow
 
 1. Create an event with a name and date.
-2. Optionally upload the master student list (CSV/XLSX with registration
-   number, name, department, contact number and blood group columns).
-3. Open the event's Scan tab and point the camera at each ID card barcode.
+2. Open the event's Scan tab and point the camera at each ID card barcode.
    A successful scan vibrates and appears instantly in the live list.
    A repeat scan shows a warning instead of adding a duplicate row.
-4. If a barcode won't scan, use the manual entry field below the camera.
-5. When the event ends, open the Export tab and download the XLSX file.
+3. If a barcode won't scan, use the manual entry field below the camera.
+4. When the event ends, open the Export tab and download the XLSX file.
 
 ## Tech stack
 
 React + TypeScript + Vite, Dexie (IndexedDB) for local-first storage,
-ZXing for camera barcode decoding, and SheetJS for spreadsheet import/export.
+ZXing for camera barcode decoding, and SheetJS for the Excel export.
