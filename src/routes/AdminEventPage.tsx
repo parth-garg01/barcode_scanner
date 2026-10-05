@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import AttendeeList from '../components/AttendeeList';
 import Spinner from '../components/Spinner';
 import { api, ApiError } from '../lib/api';
@@ -10,6 +10,7 @@ import type { EventInfo, Scan } from '../lib/types';
 /** Organiser's view of one event: its join code and everyone checked in so far. */
 export default function AdminEventPage() {
   const { code = '' } = useParams<{ code: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [scans, setScans] = useState<Scan[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,13 +19,19 @@ export default function AdminEventPage() {
 
   const load = useCallback(() => {
     setError(null);
-    Promise.all([api.joinEvent(code), api.listScans(code)])
-      .then(([info, { scans: rows }]) => {
-        setEvent(info);
-        // Newest first, in the shape the shared list component expects.
-        setScans(rows.map((scan, id): Scan => ({ ...scan, id, eventCode: code, synced: 1 })).sort((a, b) => b.timestamp - a.timestamp));
-      })
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Could not reach the server. Check your connection and try again.'));
+    const fail = (err: unknown, hint = '') =>
+      setError(err instanceof ApiError ? err.message + hint : 'Could not reach the server. Check your connection and try again.');
+    // Loaded separately: if the event's tab was removed from the sheet by hand, the
+    // list cannot load, but the event itself must still open so it can be deleted here.
+    api.joinEvent(code).then(setEvent).catch(fail);
+    api
+      .listScans(code)
+      // Newest first, in the shape the shared list component expects.
+      .then(({ scans: rows }) => setScans(rows.map((scan, id): Scan => ({ ...scan, id, eventCode: code, synced: 1 })).sort((a, b) => b.timestamp - a.timestamp)))
+      .catch((err) => {
+        setScans([]);
+        fail(err, '. Its check-ins cannot be shown, but you can still delete the event from this portal below.');
+      });
   }, [code]);
 
   useEffect(load, [load]);
@@ -41,6 +48,21 @@ export default function AdminEventPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not reach the server. Check your connection and try again.');
     } finally {
+      setSaving(false);
+    }
+  }
+
+  /** Removes the event from the portal. Nothing is deleted from the Google Sheet. */
+  async function remove() {
+    const name = event?.name ?? code;
+    if (!confirm(`Delete "${name}" from this portal? Its code stops working. Nothing is deleted from the Google Sheet: the attendance stays there until you remove it yourself.`)) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await api.deleteEvent(getAdminPassword(), code);
+      navigate('/admin', { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not reach the server. Check your connection and try again.');
       setSaving(false);
     }
   }
@@ -100,9 +122,14 @@ export default function AdminEventPage() {
       )}
       {scans ? <AttendeeList scans={scans} /> : !error && <Spinner />}
 
-      <button type="button" className="link-quiet" onClick={load}>
-        Refresh list
-      </button>
+      <div className="row-links">
+        <button type="button" className="link-quiet" onClick={load}>
+          Refresh list
+        </button>
+        <button type="button" className="link-danger" disabled={saving} onClick={remove}>
+          Delete event
+        </button>
+      </div>
     </div>
   );
 }

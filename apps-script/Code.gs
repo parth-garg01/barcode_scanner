@@ -10,8 +10,9 @@
  */
 
 var INDEX_SHEET = 'Events';
-var INDEX_HEADER = ['Code', 'Event', 'Date', 'Sheet', 'Created', 'Closed At'];
+var INDEX_HEADER = ['Code', 'Event', 'Date', 'Sheet', 'Created', 'Closed At', 'Deleted At'];
 var CLOSED_AT_COLUMN = 6;
+var DELETED_AT_COLUMN = 7;
 var SCAN_HEADER = ['Registration Number', 'Check-in Time', 'Scanned By'];
 // No 0/O or 1/I/L, so a code read out loud or copied by hand is unambiguous.
 var CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -22,6 +23,7 @@ var ACTIONS = {
   createEvent: withLock(createEvent),
   listEvents: listEvents,
   setEventOpen: withLock(setEventOpen),
+  deleteEvent: withLock(deleteEvent),
   joinEvent: joinEvent,
   listScans: listScans,
   addScans: withLock(addScans),
@@ -69,8 +71,8 @@ function createEvent(request) {
   if (!date) throw new Error('Event date is required');
 
   var book = SpreadsheetApp.getActiveSpreadsheet();
-  var events = readEvents();
-  var code = newCode(events);
+  // Deleted events count too, so a retired code is never handed out again.
+  var code = newCode(readEvents(true));
   var sheetName = uniqueSheetName(book, name);
 
   var sheet = book.insertSheet(sheetName);
@@ -81,7 +83,7 @@ function createEvent(request) {
   sheet.getRange('A1:C1').setFontWeight('bold');
   sheet.setFrozenRows(1);
 
-  indexSheet().appendRow([code, name, date, sheetName, new Date(), '']);
+  indexSheet().appendRow([code, name, date, sheetName, new Date(), '', '']);
   return { code: code, name: name, date: date, count: 0, closed: false };
 }
 
@@ -104,6 +106,19 @@ function setEventOpen(request) {
   var event = findEvent(request.code);
   indexSheet().getRange(event.row, CLOSED_AT_COLUMN).setValue(request.open ? '' : new Date());
   return { code: event.code, closed: !request.open };
+}
+
+/**
+ * Removes an event from the portal and retires its join code. Nothing is
+ * deleted from the workbook: the event's row in the index is only stamped as
+ * deleted, and its tab with the attendance rows is left alone. Removing either
+ * is a manual step in the sheet.
+ */
+function deleteEvent(request) {
+  requireAdmin(request);
+  var event = findEvent(request.code);
+  indexSheet().getRange(event.row, DELETED_AT_COLUMN).setValue(new Date());
+  return { code: event.code };
 }
 
 // ---------- Volunteers ----------
@@ -164,13 +179,14 @@ function indexSheet() {
   if (!sheet) {
     sheet = book.insertSheet(INDEX_SHEET);
     sheet.appendRow(INDEX_HEADER);
-    sheet.getRange('A1:F1').setFontWeight('bold');
+    sheet.getRange('A1:G1').setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
   return sheet;
 }
 
-function readEvents() {
+/** Events in the index, oldest first. Ones deleted from the portal are skipped unless asked for. */
+function readEvents(includeDeleted) {
   return indexSheet()
     .getDataRange()
     .getValues()
@@ -182,11 +198,12 @@ function readEvents() {
         date: isoDate(row[2]),
         sheet: String(row[3]),
         closedAt: row[5] ? new Date(row[5]).getTime() : 0,
+        deleted: !!row[6],
       };
     })
     .slice(1)
     .filter(function (event) {
-      return event.code;
+      return event.code && (includeDeleted || !event.deleted);
     });
 }
 

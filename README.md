@@ -11,7 +11,8 @@ See [PRD.md](PRD.md) for the original product requirements.
 ## Features
 
 - Admin portal (one shared password) to create events and hand out join codes,
-  see who has been scanned for each event, and stop or reopen scanning.
+  see who has been scanned for each event, stop or reopen scanning, and
+  delete an event from the portal (nothing is deleted from the sheet).
 - Volunteers join with an event code and their name, with no account needed.
 - Camera barcode scanning (Code 128, Code 39 and similar 1D formats) with
   vibration feedback on a successful scan.

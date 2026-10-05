@@ -49,7 +49,12 @@ export default function ScanPage() {
       }
     } catch (err) {
       setReachable(false);
-      if (err instanceof ApiError) setStatus({ tone: 'error', message: err.message, at: Date.now() });
+      if (err instanceof ApiError) {
+        // The server refuses this event (for example the organiser deleted it): stop scanning.
+        setClosed(true);
+        const message = err.message;
+        setStatus((current) => (current?.message === message ? current : { tone: 'error', message, at: Date.now() }));
+      }
     }
   }, [code]);
 

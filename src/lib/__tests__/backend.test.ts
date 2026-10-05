@@ -82,6 +82,42 @@ describe('Apps Script backend', () => {
     expect(reopened.results[0].status).toBe('ok');
   });
 
+  it('deletes an event from the portal without removing anything from the workbook', () => {
+    const keep = call('createEvent', { password: 'secret', name: 'Keep Me', date: '2026-10-09' }).data.code;
+    const gone = call('createEvent', { password: 'secret', name: 'Delete Me', date: '2026-10-09' }).data.code;
+    call('addScans', { code: gone, scans: [{ regNo: '24BCI0115', timestamp: 1000, volunteer: 'Asha' }] });
+
+    expect(call('deleteEvent', { password: 'nope', code: gone }).ok).toBe(false);
+    expect(call('deleteEvent', { password: 'secret', code: gone }).data).toEqual({ code: gone });
+
+    expect(call('listEvents', { password: 'secret' }).data.events.map((e: { code: string }) => e.code)).toEqual([keep]);
+    expect(call('joinEvent', { code: gone })).toEqual({ ok: false, error: 'Event code not found' });
+    expect(call('addScans', { code: gone, scans: [{ regNo: '23BCE1042', timestamp: 2000, volunteer: 'Ravi' }] }).ok).toBe(false);
+    // The tab and its rows are untouched, and the index row is kept, only stamped as deleted.
+    expect(backend.sheets.find((s) => s.name === 'Delete Me')!.rows).toHaveLength(2);
+    const index = backend.sheets.find((s) => s.name === 'Events')!.rows;
+    expect(index).toHaveLength(3); // header + both events
+    expect(index[2][0]).toBe(gone);
+    expect(index[2][6]).toBeInstanceOf(Date);
+    expect(index[1][6]).toBeFalsy();
+    // The other event still works, and deleting twice is refused rather than repeated.
+    expect(call('joinEvent', { code: keep }).ok).toBe(true);
+    expect(call('deleteEvent', { password: 'secret', code: gone })).toEqual({ ok: false, error: 'Event code not found' });
+  });
+
+  it('still lets the admin delete an event whose tab was removed from the sheet by hand', () => {
+    const code = call('createEvent', { password: 'secret', name: 'Tab Gone', date: '2026-10-09' }).data.code;
+    backend.sheets.splice(backend.sheets.findIndex((s) => s.name === 'Tab Gone'), 1);
+
+    // The portal can still list and open the event, though its check-ins are unavailable.
+    expect(call('listEvents', { password: 'secret' }).data.events[0]).toMatchObject({ code, count: 0 });
+    expect(call('joinEvent', { code }).ok).toBe(true);
+    expect(call('listScans', { code })).toEqual({ ok: false, error: 'The sheet for this event was deleted or renamed' });
+
+    expect(call('deleteEvent', { password: 'secret', code }).data).toEqual({ code });
+    expect(call('listEvents', { password: 'secret' }).data.events).toEqual([]);
+  });
+
   it('refuses values that are not registration numbers and defuses spreadsheet formulas', () => {
     const code = call('createEvent', { password: 'secret', name: '=HYPERLINK("x")', date: '2026-10-09' }).data.code;
     expect(backend.sheets[1].name).not.toMatch(/^=/);

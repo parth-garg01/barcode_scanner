@@ -41,5 +41,6 @@ export const api = {
   addScans: (code: string, scans: RemoteScan[]) => call<{ results: ScanResult[]; scans: RemoteScan[]; closed: boolean }>('addScans', { code, scans }),
   listEvents: (password: string) => call<{ events: AdminEvent[]; sheetUrl: string }>('listEvents', { password }),
   createEvent: (password: string, name: string, date: string) => call<AdminEvent>('createEvent', { password, name, date }),
+  deleteEvent: (password: string, code: string) => call<{ code: string }>('deleteEvent', { password, code }),
   setEventOpen: (password: string, code: string, open: boolean) => call<{ code: string; closed: boolean }>('setEventOpen', { password, code, open }),
 };
