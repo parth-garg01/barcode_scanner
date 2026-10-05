@@ -1,8 +1,9 @@
+import { api } from './api';
 import { db } from './db';
-import type { Scan } from './types';
+import type { RemoteScan, Scan } from './types';
 
 export class DuplicateScanError extends Error {
-  constructor(public existing: Scan) {
+  constructor(public existing: RemoteScan) {
     super(`${existing.regNo} has already checked in`);
     this.name = 'DuplicateScanError';
   }
@@ -14,28 +15,80 @@ export function normaliseRegNo(regNo: string): string {
   return regNo.trim().replace(/^\*+|\*+$/g, '').toUpperCase();
 }
 
-/** Records a check-in for an event, rejecting a registration number already scanned there. */
-export async function addScan(eventId: string, regNo: string): Promise<Scan> {
+/**
+ * Records a check-in on this device, to be sent to the sheet by syncScans.
+ * Rejects a registration number already known for the event, whether it was
+ * scanned here or came down from another volunteer in an earlier sync.
+ */
+export async function addScan(eventCode: string, regNo: string, volunteer: string): Promise<Scan> {
   const normalisedRegNo = normaliseRegNo(regNo);
 
-  const existing = await db.scans.where({ eventId, regNo: normalisedRegNo }).first();
+  const existing = await db.scans.where({ eventCode, regNo: normalisedRegNo }).first();
   if (existing) {
     throw new DuplicateScanError(existing);
   }
 
-  const scan: Scan = { eventId, regNo: normalisedRegNo, timestamp: Date.now() };
+  const scan: Scan = { eventCode, regNo: normalisedRegNo, timestamp: Date.now(), volunteer, synced: 0 };
   const id = await db.scans.add(scan);
   return { ...scan, id };
 }
 
-export function listScans(eventId: string): Promise<Scan[]> {
-  return db.scans.where('eventId').equals(eventId).reverse().sortBy('timestamp');
+export function listScans(eventCode: string): Promise<Scan[]> {
+  return db.scans.where('eventCode').equals(eventCode).reverse().sortBy('timestamp');
 }
 
-export function countScans(eventId: string): Promise<number> {
-  return db.scans.where('eventId').equals(eventId).count();
+const inFlight = new Map<string, Promise<RemoteScan[]>>();
+
+/**
+ * Sends this device's waiting check-ins to the sheet and pulls down everyone
+ * else's. Resolves with the scans the server turned away because another
+ * volunteer got there first (each one as the server's winning row), so the
+ * caller can tell the volunteer. Throws when the server cannot be reached;
+ * nothing is lost, the scans stay queued for the next attempt.
+ */
+export function syncScans(eventCode: string): Promise<RemoteScan[]> {
+  // One sync per event at a time: overlapping runs would send the same scans twice.
+  let run = inFlight.get(eventCode);
+  if (!run) {
+    run = runSync(eventCode).finally(() => inFlight.delete(eventCode));
+    inFlight.set(eventCode, run);
+  }
+  return run;
 }
 
-export function deleteScan(id: number): Promise<void> {
-  return db.scans.delete(id);
+async function runSync(eventCode: string): Promise<RemoteScan[]> {
+  const pending = await db.scans.where({ eventCode, synced: 0 }).toArray();
+  const sent = new Map(pending.map((scan) => [scan.regNo, scan]));
+
+  const reply = pending.length
+    ? await api.addScans(eventCode, pending.map(({ regNo, timestamp, volunteer }) => ({ regNo, timestamp, volunteer })))
+    : { results: [], ...(await api.listScans(eventCode)) };
+
+  const beaten: RemoteScan[] = [];
+  for (const result of reply.results) {
+    if (result.status !== 'duplicate') continue;
+    const mine = sent.get(result.regNo);
+    // The server already holding this exact scan just means an earlier send got
+    // through and its reply was lost. Only a different row is a real conflict.
+    if (mine && (mine.volunteer !== result.volunteer || mine.timestamp !== result.timestamp)) {
+      beaten.push({ regNo: result.regNo, timestamp: result.timestamp, volunteer: result.volunteer });
+    }
+  }
+
+  // The sheet is the source of truth: mirror it, then put back anything scanned
+  // here while the request was in the air.
+  await db.transaction('rw', db.scans, async () => {
+    const sentIds = new Set(pending.map((scan) => scan.id));
+    const onServer = new Set(reply.scans.map((scan) => scan.regNo));
+    const scannedMeanwhile = (await db.scans.where({ eventCode, synced: 0 }).toArray()).filter(
+      (scan) => !sentIds.has(scan.id) && !onServer.has(scan.regNo),
+    );
+    await db.scans.where('eventCode').equals(eventCode).delete();
+    await db.scans.bulkAdd([
+      ...reply.scans.map((scan): Scan => ({ ...scan, eventCode, synced: 1 })),
+      ...scannedMeanwhile.map(({ id: _id, ...scan }) => scan),
+    ]);
+  });
+
+  return beaten;
 }
