@@ -21,6 +21,7 @@ export function createLocalBackend({ adminPassword = 'admin' } = {}) {
       typeof row === 'string'
         ? formatOnly
         : {
+            setValue: (value: unknown) => void ((sheet.rows[row - 1] ??= [])[column! - 1] = value),
             setValues: (values: unknown[][]) =>
               values.forEach((cells, i) => {
                 const target = (sheet.rows[row - 1 + i] ??= []);

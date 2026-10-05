@@ -14,6 +14,7 @@ export default function AdminEventPage() {
   const [scans, setScans] = useState<Scan[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(() => {
     setError(null);
@@ -29,6 +30,20 @@ export default function AdminEventPage() {
   useEffect(load, [load]);
 
   if (!getAdminPassword()) return <Navigate to="/admin" replace />;
+
+  /** Stops or resumes check-ins for every volunteer on this event. */
+  async function setOpen(open: boolean) {
+    setSaving(true);
+    setError(null);
+    try {
+      const { closed } = await api.setEventOpen(getAdminPassword(), code, open);
+      setEvent((current) => current && { ...current, closed });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not reach the server. Check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function copy() {
     try {
@@ -63,6 +78,20 @@ export default function AdminEventPage() {
           {copied ? 'Code copied' : 'Copy code'}
         </button>
       </div>
+
+      {event && (
+        <div className="stack">
+          <p className="eyebrow">Scanning</p>
+          <p className={event.closed ? 'note' : 'muted'}>
+            {event.closed
+              ? 'Scanning is stopped. Volunteers cannot check in any more ID cards for this event.'
+              : 'Scanning is open. Volunteers with the code can check in ID cards.'}
+          </p>
+          <button type="button" className={`btn btn-block${event.closed ? ' btn-primary' : ' btn-stop'}`} disabled={saving} onClick={() => setOpen(!!event.closed)}>
+            {saving ? 'Saving…' : event.closed ? 'Allow scanning again' : 'Stop scanning'}
+          </button>
+        </div>
+      )}
 
       {error && (
         <p className="card" role="alert">

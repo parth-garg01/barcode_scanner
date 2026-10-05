@@ -25,15 +25,22 @@ export default function ScanPage() {
   const [status, setStatus] = useState<Status>(null);
   // null until the first sync attempt settles
   const [reachable, setReachable] = useState<boolean | null>(null);
+  const [closed, setClosed] = useState(!!event?.closed);
   // Live, so the count and list follow scans from this phone and from every sync.
   const scans = useLiveQuery(() => listScans(code), [code]) ?? [];
   const waiting = scans.filter((scan) => !scan.synced).length;
 
   const sync = useCallback(async () => {
     try {
-      const beaten = await syncScans(code);
+      const { beaten, refused, closed: nowClosed } = await syncScans(code);
       setReachable(true);
-      if (beaten.length) {
+      setClosed(nowClosed);
+      // Once stopped, an old "Checked in" banner would suggest scanning still works.
+      if (nowClosed) setStatus(null);
+      if (refused) {
+        warningFeedback();
+        setStatus({ tone: 'error', message: `Scanning has been stopped: ${refused} scan${refused === 1 ? ' was' : 's were'} not recorded`, at: Date.now() });
+      } else if (beaten.length) {
         // Scanned here while offline, but another volunteer's scan reached the sheet first.
         warningFeedback();
         const [first] = beaten;
@@ -109,22 +116,31 @@ export default function ScanPage() {
       <div className="stack">
         <h3 className="visually-hidden">Scan attendees</h3>
         <div className="scan-stage">
-          <BarcodeScanner onDecode={handleScan} />
+          {/* A closed event turns the camera off: nothing scanned now would be accepted. */}
+          {!closed && <BarcodeScanner onDecode={handleScan} />}
           <div className="scan-status" role="status" aria-live="polite">
             {status ? (
               <Toast key={status.at} tone={status.tone} message={status.message} />
             ) : (
-              <p className="scan-hint">Line the barcode up inside the brackets</p>
+              <p className="scan-hint">{closed ? 'Scanning is stopped for this event' : 'Line the barcode up inside the brackets'}</p>
             )}
           </div>
         </div>
+        {closed && (
+          <p className="note">
+            The organiser has stopped scanning for this event, so no more ID cards can be checked in. This screen
+            reopens by itself if scanning is turned back on.
+          </p>
+        )}
         <p className={`sync eyebrow${reachable === false ? ' sync-offline' : ''}`} role="status">
           {syncNote}
         </p>
-        <details className="manual">
-          <summary>Enter manually</summary>
-          <ManualEntryForm onSubmit={handleScan} />
-        </details>
+        {!closed && (
+          <details className="manual">
+            <summary>Enter manually</summary>
+            <ManualEntryForm onSubmit={handleScan} />
+          </details>
+        )}
         <AttendeeList scans={scans} />
       </div>
 

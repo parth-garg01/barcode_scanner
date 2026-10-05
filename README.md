@@ -10,7 +10,8 @@ See [PRD.md](PRD.md) for the original product requirements.
 
 ## Features
 
-- Admin portal (one shared password) to create events and hand out join codes.
+- Admin portal (one shared password) to create events and hand out join codes,
+  see who has been scanned for each event, and stop or reopen scanning.
 - Volunteers join with an event code and their name, with no account needed.
 - Camera barcode scanning (Code 128, Code 39 and similar 1D formats) with
   vibration feedback on a successful scan.
@@ -87,7 +88,10 @@ tried before a sheet is connected. A production build has no demo backend.
    camera at each ID card barcode. A successful scan vibrates and appears in
    the live list. A repeat scan shows who already scanned that card.
 4. If a barcode will not scan, use manual entry below the camera.
-5. Attendance is in the Google Sheet as it happens; there is nothing to export.
+5. When check-in is over, the organiser opens the event in the admin portal
+   and taps Stop scanning. Volunteers' cameras turn off and no more ID cards
+   are accepted until scanning is allowed again.
+6. Attendance is in the Google Sheet as it happens; there is nothing to export.
 
 ## Tech stack
 

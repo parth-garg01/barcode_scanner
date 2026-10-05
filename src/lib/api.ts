@@ -32,13 +32,14 @@ async function call<T>(action: string, payload: object): Promise<T> {
 }
 
 export type ScanResult =
-  | { regNo: string; status: 'ok' | 'invalid' }
+  | { regNo: string; status: 'ok' | 'invalid' | 'closed' }
   | ({ status: 'duplicate' } & RemoteScan);
 
 export const api = {
   joinEvent: (code: string) => call<EventInfo>('joinEvent', { code }),
-  listScans: (code: string) => call<{ scans: RemoteScan[] }>('listScans', { code }),
-  addScans: (code: string, scans: RemoteScan[]) => call<{ results: ScanResult[]; scans: RemoteScan[] }>('addScans', { code, scans }),
+  listScans: (code: string) => call<{ scans: RemoteScan[]; closed: boolean }>('listScans', { code }),
+  addScans: (code: string, scans: RemoteScan[]) => call<{ results: ScanResult[]; scans: RemoteScan[]; closed: boolean }>('addScans', { code, scans }),
   listEvents: (password: string) => call<{ events: AdminEvent[]; sheetUrl: string }>('listEvents', { password }),
   createEvent: (password: string, name: string, date: string) => call<AdminEvent>('createEvent', { password, name, date }),
+  setEventOpen: (password: string, code: string, open: boolean) => call<{ code: string; closed: boolean }>('setEventOpen', { password, code, open }),
 };

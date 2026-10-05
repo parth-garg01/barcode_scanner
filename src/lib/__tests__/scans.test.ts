@@ -51,7 +51,7 @@ describe('syncScans', () => {
     post('addScans', { code, scans: [{ regNo: '23BCE1042', timestamp: 500, volunteer: 'Ravi' }] });
     await addScan(code, '24BCI0115', 'Asha');
 
-    expect(await syncScans(code)).toEqual([]);
+    expect(await syncScans(code)).toEqual({ beaten: [], refused: 0, closed: false });
 
     const local = await listScans(code);
     expect(local.map((s) => [s.regNo, s.volunteer, s.synced]).sort()).toEqual([
@@ -73,7 +73,7 @@ describe('syncScans', () => {
     post('addScans', { code, scans: [{ regNo: '24BCI0115', timestamp: 700, volunteer: 'Ravi' }] });
 
     online = true;
-    expect(await syncScans(code)).toEqual([{ regNo: '24BCI0115', timestamp: 700, volunteer: 'Ravi' }]);
+    expect((await syncScans(code)).beaten).toEqual([{ regNo: '24BCI0115', timestamp: 700, volunteer: 'Ravi' }]);
 
     const local = await listScans(code);
     expect(local.map((s) => [s.regNo, s.volunteer, s.synced]).sort()).toEqual([
@@ -81,6 +81,16 @@ describe('syncScans', () => {
       ['24BCI0115', 'Ravi', 1],
     ]);
     expect(backend.sheets.find((s) => s.name === 'Hack Night')!.rows).toHaveLength(3); // header + 2, no duplicate row
+  });
+
+  it('drops scans made after the organiser stopped scanning and says so', async () => {
+    post('setEventOpen', { password: 'secret', code, open: false });
+    // A scan in the same millisecond as the closing counts as made before it.
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await addScan(code, '24BCI0115', 'Asha');
+
+    expect(await syncScans(code)).toEqual({ beaten: [], refused: 1, closed: true });
+    expect(await listScans(code)).toEqual([]);
   });
 
   it('treats a resend after a lost reply as already done, not as a conflict', async () => {
@@ -93,7 +103,7 @@ describe('syncScans', () => {
     await expect(syncScans(code)).rejects.toThrow();
 
     setTransport(async (body) => backend.handle(body));
-    expect(await syncScans(code)).toEqual([]);
+    expect((await syncScans(code)).beaten).toEqual([]);
     expect(await listScans(code)).toMatchObject([{ regNo: '24BCI0115', volunteer: 'Asha', synced: 1 }]);
     expect(backend.sheets.find((s) => s.name === 'Hack Night')!.rows).toHaveLength(2);
   });

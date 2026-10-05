@@ -24,7 +24,7 @@ describe('Apps Script backend', () => {
     call('createEvent', { password: 'secret', name: 'Robotics Fest', date: '2026-10-10' });
     expect(backend.sheets.map((s) => s.name)).toContain('Robotics Fest (2)');
 
-    expect(call('joinEvent', { code: event.code.toLowerCase() }).data).toEqual({ code: event.code, name: 'Robotics Fest', date: '2026-10-09' });
+    expect(call('joinEvent', { code: event.code.toLowerCase() }).data).toEqual({ code: event.code, name: 'Robotics Fest', date: '2026-10-09', closed: false });
     expect(call('joinEvent', { code: 'ZZZZZZ' })).toEqual({ ok: false, error: 'Event code not found' });
   });
 
@@ -54,6 +54,32 @@ describe('Apps Script backend', () => {
     expect(sheet.rows).toHaveLength(3); // header + two check-ins
     expect(sheet.rows[0]).toEqual(['Registration Number', 'Check-in Time', 'Scanned By']);
     expect(call('listEvents', { password: 'secret' }).data.events[0]).toMatchObject({ code, count: 2 });
+  });
+
+  it('lets the admin stop scanning: later scans are refused, earlier offline ones still count', () => {
+    const code = call('createEvent', { password: 'secret', name: 'Hack Night', date: '2026-10-09' }).data.code;
+    const beforeClosing = Date.now() - 60_000;
+
+    expect(call('setEventOpen', { password: 'nope', code, open: false }).ok).toBe(false);
+    expect(call('setEventOpen', { password: 'secret', code, open: false }).data).toEqual({ code, closed: true });
+    expect(call('joinEvent', { code }).data.closed).toBe(true);
+    expect(call('listEvents', { password: 'secret' }).data.events[0].closed).toBe(true);
+
+    const reply = call('addScans', {
+      code,
+      scans: [
+        { regNo: '24BCI0115', timestamp: Date.now() + 1000, volunteer: 'Asha' }, // scanned after closing
+        { regNo: '23BCE1042', timestamp: beforeClosing, volunteer: 'Ravi' }, // scanned earlier, synced late
+      ],
+    }).data;
+    expect(reply.closed).toBe(true);
+    expect(reply.results.map((r: { status: string }) => r.status)).toEqual(['closed', 'ok']);
+    expect(reply.scans.map((s: { regNo: string }) => s.regNo)).toEqual(['23BCE1042']);
+
+    call('setEventOpen', { password: 'secret', code, open: true });
+    const reopened = call('addScans', { code, scans: [{ regNo: '24BCI0115', timestamp: Date.now(), volunteer: 'Asha' }] }).data;
+    expect(reopened.closed).toBe(false);
+    expect(reopened.results[0].status).toBe('ok');
   });
 
   it('refuses values that are not registration numbers and defuses spreadsheet formulas', () => {

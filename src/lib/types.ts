@@ -3,6 +3,7 @@ export interface EventInfo {
   code: string;
   name: string;
   date: string; // ISO date (yyyy-mm-dd)
+  closed?: boolean; // the organiser has stopped scanning for this event
 }
 
 /** An event in the admin portal, with its running check-in count. */

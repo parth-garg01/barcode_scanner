@@ -10,7 +10,8 @@
  */
 
 var INDEX_SHEET = 'Events';
-var INDEX_HEADER = ['Code', 'Event', 'Date', 'Sheet', 'Created'];
+var INDEX_HEADER = ['Code', 'Event', 'Date', 'Sheet', 'Created', 'Closed At'];
+var CLOSED_AT_COLUMN = 6;
 var SCAN_HEADER = ['Registration Number', 'Check-in Time', 'Scanned By'];
 // No 0/O or 1/I/L, so a code read out loud or copied by hand is unambiguous.
 var CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -20,6 +21,7 @@ var MAX_SCANS_PER_REQUEST = 500;
 var ACTIONS = {
   createEvent: withLock(createEvent),
   listEvents: listEvents,
+  setEventOpen: withLock(setEventOpen),
   joinEvent: joinEvent,
   listScans: listScans,
   addScans: withLock(addScans),
@@ -79,8 +81,8 @@ function createEvent(request) {
   sheet.getRange('A1:C1').setFontWeight('bold');
   sheet.setFrozenRows(1);
 
-  indexSheet().appendRow([code, name, date, sheetName, new Date()]);
-  return { code: code, name: name, date: date, count: 0 };
+  indexSheet().appendRow([code, name, date, sheetName, new Date(), '']);
+  return { code: code, name: name, date: date, count: 0, closed: false };
 }
 
 function listEvents(request) {
@@ -88,30 +90,44 @@ function listEvents(request) {
   var book = SpreadsheetApp.getActiveSpreadsheet();
   var events = readEvents().map(function (event) {
     var sheet = book.getSheetByName(event.sheet);
-    return { code: event.code, name: event.name, date: event.date, count: sheet ? Math.max(0, sheet.getLastRow() - 1) : 0 };
+    return { code: event.code, name: event.name, date: event.date, count: sheet ? Math.max(0, sheet.getLastRow() - 1) : 0, closed: !!event.closedAt };
   });
   return { events: events.reverse(), sheetUrl: book.getUrl() };
+}
+
+/**
+ * Closes an event to further check-ins, or reopens it. The closing time is
+ * kept so that scans made before it, on a phone that was offline, still count.
+ */
+function setEventOpen(request) {
+  requireAdmin(request);
+  var event = findEvent(request.code);
+  indexSheet().getRange(event.row, CLOSED_AT_COLUMN).setValue(request.open ? '' : new Date());
+  return { code: event.code, closed: !request.open };
 }
 
 // ---------- Volunteers ----------
 
 function joinEvent(request) {
   var event = findEvent(request.code);
-  return { code: event.code, name: event.name, date: event.date };
+  return { code: event.code, name: event.name, date: event.date, closed: !!event.closedAt };
 }
 
 function listScans(request) {
-  return { scans: readScans(eventSheet(findEvent(request.code))) };
+  var event = findEvent(request.code);
+  return { scans: readScans(eventSheet(event)), closed: !!event.closedAt };
 }
 
 /**
  * Appends check-ins, keeping one row per registration number. Each scan gets a
- * result: "ok", "duplicate" (with who scanned it first and when) or "invalid".
+ * result: "ok", "duplicate" (with who scanned it first and when), "invalid", or
+ * "closed" when it was made after the organiser stopped scanning.
  * Resending a scan that was already stored reports the stored row, so a retry
  * after a lost response is harmless.
  */
 function addScans(request) {
-  var sheet = eventSheet(findEvent(request.code));
+  var event = findEvent(request.code);
+  var sheet = eventSheet(event);
   var incoming = Array.isArray(request.scans) ? request.scans.slice(0, MAX_SCANS_PER_REQUEST) : [];
   var stored = readScans(sheet);
   var byRegNo = {};
@@ -126,7 +142,10 @@ function addScans(request) {
     var existing = byRegNo[regNo];
     if (existing) return { regNo: regNo, status: 'duplicate', volunteer: existing.volunteer, timestamp: existing.timestamp };
 
-    var added = { regNo: regNo, timestamp: cleanTimestamp(scan.timestamp), volunteer: cleanText(scan.volunteer, 60) || 'Unknown' };
+    var timestamp = cleanTimestamp(scan.timestamp);
+    if (event.closedAt && timestamp > event.closedAt) return { regNo: regNo, status: 'closed' };
+
+    var added = { regNo: regNo, timestamp: timestamp, volunteer: cleanText(scan.volunteer, 60) || 'Unknown' };
     byRegNo[regNo] = added;
     stored.push(added);
     rows.push([added.regNo, new Date(added.timestamp), added.volunteer]);
@@ -134,7 +153,7 @@ function addScans(request) {
   });
 
   if (rows.length) sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 3).setValues(rows);
-  return { results: results, scans: stored };
+  return { results: results, scans: stored, closed: !!event.closedAt };
 }
 
 // ---------- Sheet access ----------
@@ -145,7 +164,7 @@ function indexSheet() {
   if (!sheet) {
     sheet = book.insertSheet(INDEX_SHEET);
     sheet.appendRow(INDEX_HEADER);
-    sheet.getRange('A1:E1').setFontWeight('bold');
+    sheet.getRange('A1:F1').setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
   return sheet;
@@ -155,12 +174,19 @@ function readEvents() {
   return indexSheet()
     .getDataRange()
     .getValues()
-    .slice(1)
-    .filter(function (row) {
-      return row[0];
+    .map(function (row, index) {
+      return {
+        row: index + 1, // 1-based row in the index sheet, for updates
+        code: String(row[0]),
+        name: String(row[1]),
+        date: isoDate(row[2]),
+        sheet: String(row[3]),
+        closedAt: row[5] ? new Date(row[5]).getTime() : 0,
+      };
     })
-    .map(function (row) {
-      return { code: String(row[0]), name: String(row[1]), date: isoDate(row[2]), sheet: String(row[3]) };
+    .slice(1)
+    .filter(function (event) {
+      return event.code;
     });
 }
 

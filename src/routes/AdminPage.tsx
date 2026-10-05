@@ -151,7 +151,9 @@ export default function AdminPage() {
                     </span>
                     <span className="stub-body">
                       <strong>{event.name}</strong>
-                      <span>{event.count} checked in</span>
+                      <span>
+                        {event.count} checked in{event.closed && ' · scanning stopped'}
+                      </span>
                     </span>
                     <span className="stub-code">
                       <span className="mono">{event.code}</span>

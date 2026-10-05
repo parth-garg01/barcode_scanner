@@ -37,16 +37,24 @@ export function listScans(eventCode: string): Promise<Scan[]> {
   return db.scans.where('eventCode').equals(eventCode).reverse().sortBy('timestamp');
 }
 
-const inFlight = new Map<string, Promise<RemoteScan[]>>();
+export interface SyncResult {
+  /** Scans turned away because another volunteer got there first, each as the server's winning row. */
+  beaten: RemoteScan[];
+  /** How many scans were refused because they were made after the organiser stopped scanning. */
+  refused: number;
+  /** Whether the organiser has stopped scanning for this event. */
+  closed: boolean;
+}
+
+const inFlight = new Map<string, Promise<SyncResult>>();
 
 /**
  * Sends this device's waiting check-ins to the sheet and pulls down everyone
- * else's. Resolves with the scans the server turned away because another
- * volunteer got there first (each one as the server's winning row), so the
- * caller can tell the volunteer. Throws when the server cannot be reached;
- * nothing is lost, the scans stay queued for the next attempt.
+ * else's. The result says what the server turned away, so the caller can tell
+ * the volunteer. Throws when the server cannot be reached; nothing is lost,
+ * the scans stay queued for the next attempt.
  */
-export function syncScans(eventCode: string): Promise<RemoteScan[]> {
+export function syncScans(eventCode: string): Promise<SyncResult> {
   // One sync per event at a time: overlapping runs would send the same scans twice.
   let run = inFlight.get(eventCode);
   if (!run) {
@@ -56,7 +64,7 @@ export function syncScans(eventCode: string): Promise<RemoteScan[]> {
   return run;
 }
 
-async function runSync(eventCode: string): Promise<RemoteScan[]> {
+async function runSync(eventCode: string): Promise<SyncResult> {
   const pending = await db.scans.where({ eventCode, synced: 0 }).toArray();
   const sent = new Map(pending.map((scan) => [scan.regNo, scan]));
 
@@ -65,7 +73,9 @@ async function runSync(eventCode: string): Promise<RemoteScan[]> {
     : { results: [], ...(await api.listScans(eventCode)) };
 
   const beaten: RemoteScan[] = [];
+  let refused = 0;
   for (const result of reply.results) {
+    if (result.status === 'closed') refused++;
     if (result.status !== 'duplicate') continue;
     const mine = sent.get(result.regNo);
     // The server already holding this exact scan just means an earlier send got
@@ -90,5 +100,5 @@ async function runSync(eventCode: string): Promise<RemoteScan[]> {
     ]);
   });
 
-  return beaten;
+  return { beaten, refused, closed: reply.closed };
 }
